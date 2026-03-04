@@ -1,168 +1,142 @@
+# Skill: noir-idioms
+
+user-invocable: false
+
+Idiomatic Noir patterns for ZK circuits. Invoked automatically when reviewing or writing Noir code.
+
 ---
-name: noir-idioms
-description: Guidelines for writing idiomatic, efficient Noir programs. Use when writing or reviewing Noir code.
----
 
-# Writing Idiomatic Noir
+## Principle 0 — assert() es el constraint
 
-These guidelines help you write Noir programs that are readable, idiomatic, and produce efficient circuits.
-
-## Core Principle: Hint and Verify
-
-Computing a value is often more expensive in a circuit than verifying a claimed value is correct. Use `unconstrained` functions to compute results off-circuit, then verify them with cheap constraints.
+En Noir, `assert()` es la única forma de generar un constraint. No existe `<==` ni `===` — la constraint ES la aserción.
 
 ```noir
-// Expensive: sorting an array in-circuit requires many comparisons and swaps
-let sorted = sort_in_circuit(arr);
+// BAD: computa pero no constrains nada
+let result = a * b;
 
-// Cheaper: hint the sorted array, verify it's a valid permutation and is ordered
-let sorted = unsafe { sort_hint(arr) };
-// verify sorted order and that sorted is a permutation of arr
+// GOOD: computa Y constrains
+let result = a * b;
+assert(result == expected);  // genera 1 constraint
 ```
 
-Note that the compiler already injects unconstrained helpers for some operations automatically (e.g., integer division). Don't hint what the compiler already optimizes — focus on higher-level computations like sorting, searching, and array construction where the compiler cannot automatically apply this pattern.
+`assert(a == b)` compila a una constraint de igualdad en ACIR. Sin `assert`, ningún cálculo genera constraints.
 
-### What to Hint
+---
 
-Hint the **final result**, not intermediate values. If your unconstrained function computes helper structures (masks, indices, accumulators) on the way to an answer, return only the answer and verify it directly against the inputs. Fewer hinted values means fewer constraints needed.
+## Principle 1 — unconstrained fn
 
-### Safety Comments
-
-Every `unsafe` block must have a `// Safety:` comment that explains *why* the constrained code makes the hint sound — not just *where* the verification happens, but what property it enforces:
+La distinción más importante de Noir. Una `unconstrained fn` corre fuera del circuito — es un hint, igual que `<--` en Circom.
 
 ```noir
-// Safety: each result element is checked against a[i] or b[i] depending on
-// whether i <= index, so a dishonest prover cannot substitute arbitrary values
-let result = unsafe { my_hint(a, b, index) };
+// Hint: corre off-circuit, no genera constraints
+unconstrained fn compute_inverse(x: Field) -> Field {
+    1 / x  // aritmética de campo, pero sin constraints
+}
+
+// Circuit function: los assert() dentro SÍ generan constraints
+fn verify_inverse(x: Field, inv: Field) {
+    assert(x * inv == 1);  // 1 constraint
+}
+
+// Patrón hint-and-verify:
+fn safe_inverse(x: Field) -> Field {
+    let inv = compute_inverse(x);  // hint (0 constraints)
+    verify_inverse(x, inv);        // verify (1 constraint)
+    inv
+}
 ```
 
-## ACIR vs Brillig: Different Optimization Goals
+Usar `unconstrained` para: buscar bits, calcular inversas, ordenar arrays — cualquier cosa que se pueda verificar más barato de lo que cuesta computar.
 
-Noir compiles to two different targets depending on context, and they have fundamentally different performance characteristics.
+---
 
-**ACIR (constrained code)** — the default. Every operation becomes arithmetic constraints in a circuit. Optimize for **gate/constraint count**: fewer constraints = faster proving.
+## Principle 2 — Costo de operaciones
 
-**Brillig (unconstrained code)** — functions marked `unconstrained`. Runs on a conventional VM. Optimize for **execution speed and bytecode size**: familiar performance intuitions apply.
-
-### Key Differences
-
-| Aspect | ACIR (constrained) | Brillig (unconstrained) |
+| Operación | Gates ACIR | Notas |
 |---|---|---|
-| Loops | Fully unrolled — bounds must be comptime-known | Native loop support — runtime-dynamic bounds are fine |
-| Control flow | Flattened into conditional selects — both branches are always evaluated | Real branching — only the taken branch executes |
-| Function calls | Always inlined | Preserved when beneficial |
-| Comparisons | Inequality (`<`, `<=`) requires range checks (costs gates) | Native comparison instructions (cheap) |
+| `a * b` dentro de `assert` | **1** | Multiplication gate |
+| `a + b`, `a - b` | **0** | Linear, absorbido en la gate |
+| `assert(a == b)` con expresión lineal | **0** | Solo chequeo de igualdad |
+| `assert(a == b * c)` | **1** | Una mult gate |
+| División `a / b` | **1** | Via inverso multiplicativo |
+| `a as bool` / range check 1 bit | **1** | |
+| Range check k bits | **k** | Un assert por bit |
+| `std::hash::poseidon` (2 inputs) | **~240** | Ver docs/zk/hash-functions.md |
 
-### Branching with `is_unconstrained()`
+**Nota:** el compilador de Noir optimiza ACIR antes de generar la prueba. El gate count final puede ser menor que la suma naive. Usar `nargo info` para el número oficial.
 
-When a function may be called in either context, use `is_unconstrained()` to provide optimized implementations for each target. This is common in the standard library:
+---
+
+## Principle 3 — bool tiene constraints implícitas
+
+A diferencia de `Field`, el tipo `bool` de Noir genera automáticamente la constraint de rango `b * (1 - b) === 0` al declarar la variable.
 
 ```noir
-pub fn any<Env>(self, predicate: fn[Env](T) -> bool) -> bool {
-    let mut ret = false;
-    if is_unconstrained() {
-        // Brillig path: use the actual length directly
-        for i in 0..self.len {
-            ret |= predicate(self.storage[i]);
-        }
-    } else {
-        // ACIR path: iterate the full static capacity, guard with a flag
-        let mut exceeded_len = false;
-        for i in 0..MaxLen {
-            exceeded_len |= i == self.len;
-            if !exceeded_len {
-                ret |= predicate(self.storage[i]);
-            }
-        }
+// bool: Noir agrega la range constraint automáticamente
+fn check_bit(b: bool) {
+    // b ya está constrainado a {0, 1} por su tipo
+    assert(b == true);  // solo 1 assert adicional
+}
+
+// Field: sin constraints de rango automáticas
+fn check_field_bit(b: Field) {
+    assert(b * (1 - b) == 0);  // necesitas hacerlo explícito — 1 constraint
+    assert(b == 1);
+}
+```
+
+Usar `bool` cuando el signal debe ser booleano — el compilador lo maneja. Usar `Field` solo cuando necesitas flexibilidad de tipo.
+
+---
+
+## Principle 4 — Arrays y loops
+
+```noir
+// Los loops for se unrollan en tiempo de compilación — generan N copias del body
+fn sum_bits(bits: [Field; 8]) -> Field {
+    let mut acc: Field = 0;
+    for i in 0..8 {
+        assert(bits[i] * (1 - bits[i]) == 0);  // 8 constraints (unrolled)
+        acc = acc + bits[i] * (1 << i as Field);
     }
-    ret
+    acc
 }
 ```
 
-The constrained path must iterate the full `MaxLen` because ACIR loops are unrolled at compile time — the compiler needs a static bound. The unconstrained path can loop over exactly `self.len` elements because Brillig supports runtime-dynamic loop bounds.
+`for` en Noir es un macro de compilación — el rango debe ser una constante. No existen loops dinámicos en el circuito.
 
-### Practical Guidelines
+Los arrays de tamaño variable requieren un tamaño máximo fijo con padding.
 
-- **Constrained code**: minimize constraints — use hint-and-verify, avoid unnecessary comparisons, leverage type-system range guarantees to simplify constraints.
-- **Unconstrained code**: write for clarity and speed like normal imperative code — use dynamic loops, early returns, and mutable state freely.
-- Don't add constraint-style verification inside `unconstrained` functions — it wastes execution time without adding security (unconstrained results are verified by the constrained caller).
-- Don't use runtime-dynamic loop bounds in constrained code — the compiler must be able to unroll all loops.
+---
 
-## Leveraging the Type System
+## Principle 5 — Conteo real de gates
 
-Noir's type system provides range guarantees that make subsequent constraints cheaper — the compiler knows what values a type can hold and can emit simpler arithmetic as a result. Use typed values instead of manual field arithmetic.
-
-### Use `bool` Instead of Field Arithmetic
-
-The `bool` type guarantees values are 0 or 1, so the compiler can use simpler constraints for operations on booleans. Prefer boolean operators over field multiplication for logical conditions:
+Solo los `assert()` que contienen multiplicaciones generan gates de multiplicación. Las operaciones lineales son "gratis" dentro de un assert.
 
 ```noir
-// Prefer: readable, compiler knows switched[i] is 0 or 1
-assert(!switched[i] | switched[i - 1]);
-
-// Avoid: manual field encoding of the same logic
-let s = switched[i] as Field;
-let prev = switched[i - 1] as Field;
-assert(s * (1 - prev) == 0);
-```
-
-Both compile to equivalent constraints, but the boolean version communicates intent.
-
-## Conditionals
-
-### Use `if/else` Expressions for Conditional Values
-
-The compiler lowers `if cond { a } else { b }` into an optimized conditional select. Don't hand-roll the arithmetic:
-
-```noir
-// Prefer: clear intent
-let val = if condition { x } else { y };
-
-// Avoid: manual select
-let c = condition as Field;
-let val = c * (x - y) + y;
-```
-
-### Hoist Assertions Out of Conditional Branches
-
-When both branches of an `if/else` contain assertions, extract the condition into a value and assert once. The compiler optimizes a single assertion against a conditional value better than separate assertions in each branch:
-
-```noir
-// Prefer: one assertion, compiler optimizes the conditional select
-let expected = if condition { a } else { b };
-assert_eq(result, expected);
-
-// Avoid: duplicated assertions in each branch
-if condition {
-    assert_eq(result, a);
-} else {
-    assert_eq(result, b);
+fn example(a: Field, b: Field, c: Field) -> Field {
+    let ab = a * b;
+    assert(ab == c);           // 1 gate (mult: a*b)
+    let sum = a + b + c;
+    assert(sum == a + b + c);  // 0 gates (lineal)
+    let abc = ab * c;
+    assert(abc != 0);          // 1 gate (mult: ab*c)
+    abc
+    // Total: 2 gates de multiplicación
 }
 ```
 
-## Assertions
+Para el gate count oficial: `nargo info --package <name>` reporta `Circuit size: N`.
 
-Use `assert_eq` over `assert(x == y)`. It provides better error messages on failure and reads more naturally:
+---
 
-```noir
-assert_eq(result[i], expected);
-```
+## Checklist de review
 
-## Comparison Costs
-
-Integer comparisons (`<`, `<=`, `>`, `>=`) require range checks, which cost gates. Equality checks (`==`) are cheaper. Strategies to reduce comparison costs:
-
-- **Avoid redundant comparisons**: If you need to check `i <= index` in a loop, do it once per iteration — don't check the same condition in multiple places.
-- **Don't over-optimize comparisons**: Replacing a simple `<=` with flag-tracking (`if i == index { flag = true }`) adds state and may produce *more* gates. Always measure before committing to a "cleverer" approach.
-
-## Summary Checklist
-
-When writing or reviewing Noir code:
-
-1. Can any in-circuit computation be replaced with hint-and-verify?
-2. Are you hinting only final results, not intermediate scaffolding?
-3. Are boolean conditions using `bool` types and operators, not Field arithmetic?
-4. Are conditional values using `if/else` expressions, not manual selects?
-5. Are assertions using `assert_eq` where applicable?
-6. Are constrained and unconstrained paths optimized for their respective targets?
-7. Do all loops in constrained code have comptime-known bounds?
+| Red flag | Qué significa |
+|---|---|
+| Cálculo sin `assert` correspondiente | Variable no está constrainada — soundness hole |
+| `unconstrained fn` que hace trabajo "de verdad" | Ok para hints; asegúrate de que haya un `assert` de verificación después |
+| `Field` donde debería ser `bool` | Sin range constraint automática — agregar `assert(b*(1-b)==0)` |
+| Loop con rango no-constante | No compila — los rangos deben ser literales o `global` |
+| División directa sin hint | Puede fallar en el prover si el denominador es 0 — usar `unconstrained` para el hint |
+| `assert(false)` | Constraint que nunca se satisface — circuit siempre falla |

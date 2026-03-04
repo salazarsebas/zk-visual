@@ -1,0 +1,75 @@
+---
+import '../styles/global.css';
+import { getAllCircuits, getCircuitSlug } from '../lib/circuits/index';
+
+const circuits = getAllCircuits();
+
+const categories = [
+  { id: '1', label: 'Foundations' },
+  { id: '2', label: 'Core Gadgets' },
+  { id: '3', label: 'Hash Functions' },
+  { id: '4', label: 'Merkle Trees' },
+  { id: '5', label: 'Proving Systems' },
+];
+
+const firstCircuit = circuits[0];
+const firstSlug = firstCircuit ? getCircuitSlug(firstCircuit) : '';
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <title>ZK Visual — Interactive ZK Circuit Visualizer</title>
+    <meta
+      name="description"
+      content="Step through ZK circuits frame-by-frame. Watch constraints get satisfied, witnesses assigned, and proof systems work."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-black text-gray-100 min-h-screen font-sans antialiased">
+    <main class="max-w-2xl mx-auto px-6 flex flex-col items-center justify-center min-h-screen">
+      <!-- Hero -->
+      <section class="text-center mb-20">
+        <h1 class="text-5xl font-bold tracking-tight mb-4">
+          ZK Visual
+        </h1>
+        <p class="text-gray-400 mb-10">
+          Interactive circuit visualizer
+        </p>
+        <a
+          href={`/${firstSlug}`}
+          class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-black bg-white hover:bg-gray-200 rounded transition-colors"
+        >
+          Start Exploring
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M4 2l8 6-8 6V2z" />
+          </svg>
+        </a>
+      </section>
+
+      <!-- Categories -->
+      <nav class="flex flex-wrap justify-center gap-x-8 gap-y-3">
+        {categories.map((cat) => {
+          const catCircuits = circuits.filter((c) => c.category === cat.id);
+          const firstItem = catCircuits[0];
+          const href = firstItem ? `/${getCircuitSlug(firstItem)}` : '#';
+          return (
+            <a
+              href={href}
+              class="text-sm text-gray-500 hover:text-white transition-colors"
+            >
+              {cat.label}
+            </a>
+          );
+        })}
+      </nav>
+    </main>
+  </body>
+</html>

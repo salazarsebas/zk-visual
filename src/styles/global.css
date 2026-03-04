@@ -1,0 +1,60 @@
+@import 'tailwindcss';
+
+@layer base {
+  body {
+    @apply bg-black text-gray-100 antialiased;
+    font-family: 'Geist', system-ui, sans-serif;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.35);
+  }
+}
+
+/* Monaco active line highlighting */
+.zkviz-active-line {
+  background-color: rgba(250, 204, 21, 0.08) !important;
+  border-left: 2px solid #facc15;
+}
+
+.zkviz-active-glyph {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.zkviz-active-glyph::before {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background-color: #facc15;
+  margin-top: 4px;
+}
+
+.zkviz-inline-annotation {
+  color: #6b7280;
+  font-style: italic;
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

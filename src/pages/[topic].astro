@@ -1,0 +1,37 @@
+---
+import '../styles/global.css';
+import { getAllCircuits, getCircuitSlug } from '../lib/circuits/index';
+import { App } from '../components/App';
+
+export function getStaticPaths() {
+  const circuits = getAllCircuits();
+  return circuits.map((circuit) => ({
+    params: { topic: getCircuitSlug(circuit) },
+    props: { circuitId: circuit.id, circuitTitle: circuit.title },
+  }));
+}
+
+const { circuitId, circuitTitle } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <title>{circuitTitle} — ZK Visual</title>
+    <meta
+      name="description"
+      content={`Interactive visualization of ${circuitTitle}. Step through the circuit and understand ZK constraints.`}
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-black text-gray-100 font-sans antialiased">
+    <App circuitId={circuitId} client:only="react" />
+  </body>
+</html>
