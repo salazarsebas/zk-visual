@@ -36,10 +36,9 @@ export function RadarChart({ systems, axes, className = '' }: Props) {
   }
 
   return (
-    <div className={`flex flex-col items-center gap-4 p-4 ${className}`}>
+    <div className={`flex flex-col items-center gap-4 p-3 sm:p-4 ${className}`}>
       <svg
-        width={CHART_SIZE}
-        height={CHART_SIZE}
+        className="w-full max-w-[300px]"
         viewBox={`0 0 ${CHART_SIZE} ${CHART_SIZE}`}
       >
         {/* Grid levels */}

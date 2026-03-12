@@ -19,9 +19,11 @@ const firstSlug = firstCircuit ? getCircuitSlug(firstCircuit) : '';
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#000000" />
-    <title>ZK Visual — Interactive ZK Circuit Visualizer</title>
+    <link rel="icon" type="image/png" href="/learnzk.png" />
+    <link rel="apple-touch-icon" href="/learnzk.png" />
+    <title>ZK Visual - Interactive ZK Circuit Visualizer</title>
     <meta
       name="description"
       content="Step through ZK circuits frame-by-frame. Watch constraints get satisfied, witnesses assigned, and proof systems work."
@@ -34,13 +36,14 @@ const firstSlug = firstCircuit ? getCircuitSlug(firstCircuit) : '';
     />
   </head>
   <body class="bg-black text-gray-100 min-h-screen font-sans antialiased">
-    <main class="max-w-2xl mx-auto px-6 flex flex-col items-center justify-center min-h-screen">
+    <main class="max-w-2xl mx-auto px-4 sm:px-6 flex flex-col items-center justify-center min-h-screen">
       <!-- Hero -->
-      <section class="text-center mb-20">
-        <h1 class="text-5xl font-bold tracking-tight mb-4">
+      <section class="text-center mb-12 sm:mb-20">
+        <img src="/learnzk.png" alt="ZK Visual logo" class="w-24 sm:w-32 mx-auto mb-6 sm:mb-8" />
+        <h1 class="text-3xl sm:text-5xl font-bold tracking-tight mb-3 sm:mb-4">
           ZK Visual
         </h1>
-        <p class="text-gray-400 mb-10">
+        <p class="text-sm sm:text-base text-gray-400 mb-8 sm:mb-10">
           Interactive circuit visualizer
         </p>
         <a
@@ -55,7 +58,7 @@ const firstSlug = firstCircuit ? getCircuitSlug(firstCircuit) : '';
       </section>
 
       <!-- Categories -->
-      <nav class="flex flex-wrap justify-center gap-x-8 gap-y-3">
+      <nav class="flex flex-wrap justify-center gap-x-6 sm:gap-x-8 gap-y-3">
         {categories.map((cat) => {
           const catCircuits = circuits.filter((c) => c.category === cat.id);
           const firstItem = catCircuits[0];

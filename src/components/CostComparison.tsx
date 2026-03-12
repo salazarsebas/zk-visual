@@ -10,7 +10,7 @@ export function CostComparison({ comparison, className = '' }: Props) {
   const maxValue = Math.max(...comparison.bars.map((b) => b.maxValue));
 
   return (
-    <div className={`flex flex-col gap-4 p-6 ${className}`}>
+    <div className={`flex flex-col gap-3 sm:gap-4 p-4 sm:p-6 ${className}`}>
       {comparison.bars.map((bar) => {
         const percentage = maxValue > 0 ? (bar.value / maxValue) * 100 : 0;
         const color = getBarColor(bar.color);

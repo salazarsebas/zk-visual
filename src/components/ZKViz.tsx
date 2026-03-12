@@ -75,23 +75,23 @@ export function ZKViz({ circuit }: Props) {
           ) : currentStep?.pipeline ? (
             <PipelineVisualizer pipeline={currentStep.pipeline} className="h-full" />
           ) : currentStep?.graph && layout ? (
-            <div className="flex h-full">
+            <div className="flex flex-col sm:flex-row h-full">
               <CircuitVisualizer
                 graph={currentStep.graph}
                 layout={layout}
-                className={currentStep.comparison ? 'w-3/5' : 'w-full'}
+                className={currentStep.comparison ? 'sm:w-3/5 h-3/5 sm:h-full' : 'w-full h-full'}
               />
               {currentStep.comparison && (
                 <CostComparison
                   comparison={currentStep.comparison}
-                  className="w-2/5 border-l border-white/5"
+                  className="h-2/5 sm:h-full sm:w-2/5 border-t sm:border-t-0 sm:border-l border-white/5"
                 />
               )}
             </div>
           ) : currentStep?.comparison ? (
             <CostComparison comparison={currentStep.comparison} className="h-full" />
           ) : (
-            <div className="flex items-center justify-center h-full text-gray-600 text-sm px-8 text-center">
+            <div className="flex items-center justify-center h-full text-gray-600 text-sm px-4 sm:px-8 text-center">
               {currentStep?.description ?? 'Select a visualization to begin'}
             </div>
           )}

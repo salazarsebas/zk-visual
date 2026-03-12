@@ -8,13 +8,13 @@ interface Props {
 
 export function PipelineVisualizer({ pipeline, className = '' }: Props) {
   return (
-    <div className={`flex items-center justify-center gap-2 p-8 ${className}`}>
+    <div className={`flex flex-col sm:flex-row items-center justify-center gap-2 p-4 sm:p-8 ${className}`}>
       {pipeline.stages.map((stage, i) => (
-        <div key={stage.id} className="flex items-center gap-2">
+        <div key={stage.id} className="flex flex-col sm:flex-row items-center gap-2">
           <div
             className={`
               relative flex items-center justify-center
-              px-4 py-3 rounded-lg border min-w-[120px]
+              px-4 py-3 rounded-lg border w-full sm:w-auto min-w-[100px] sm:min-w-[120px]
               transition-all duration-300
               ${stage.state === 'pending'
                 ? 'border-white/5 bg-white/[0.02] text-gray-600'
@@ -42,21 +42,40 @@ export function PipelineVisualizer({ pipeline, className = '' }: Props) {
 
           {/* Arrow between stages */}
           {i < pipeline.stages.length - 1 && (
-            <svg width="24" height="16" viewBox="0 0 24 16" className="shrink-0">
-              <path
-                d="M0 8 L18 8 M14 3 L20 8 L14 13"
-                fill="none"
-                stroke={
-                  stage.state === 'complete'
-                    ? COLORS.wireSatisfied
-                    : COLORS.wireInactive
-                }
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ transition: 'stroke 300ms' }}
-              />
-            </svg>
+            <>
+              {/* Vertical arrow (mobile) */}
+              <svg width="16" height="24" viewBox="0 0 16 24" className="shrink-0 sm:hidden">
+                <path
+                  d="M8 0 L8 18 M3 14 L8 20 L13 14"
+                  fill="none"
+                  stroke={
+                    stage.state === 'complete'
+                      ? COLORS.wireSatisfied
+                      : COLORS.wireInactive
+                  }
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ transition: 'stroke 300ms' }}
+                />
+              </svg>
+              {/* Horizontal arrow (desktop) */}
+              <svg width="24" height="16" viewBox="0 0 24 16" className="shrink-0 hidden sm:block">
+                <path
+                  d="M0 8 L18 8 M14 3 L20 8 L14 13"
+                  fill="none"
+                  stroke={
+                    stage.state === 'complete'
+                      ? COLORS.wireSatisfied
+                      : COLORS.wireInactive
+                  }
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ transition: 'stroke 300ms' }}
+                />
+              </svg>
+            </>
           )}
         </div>
       ))}

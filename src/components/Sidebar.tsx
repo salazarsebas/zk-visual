@@ -83,7 +83,7 @@ export function Sidebar({ circuits, activeId, onSelect }: Props) {
       {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed top-3 left-3 z-50 p-2 lg:hidden"
+        className="fixed top-2 left-2 z-50 p-3 lg:hidden"
       >
         <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" className="text-gray-400">
           <rect y="2" width="18" height="1.5" rx="0.75" />

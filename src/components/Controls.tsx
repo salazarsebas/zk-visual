@@ -34,12 +34,12 @@ export function Controls({
   const progress = totalSteps > 1 ? (currentStep / (totalSteps - 1)) * 100 : 0;
 
   return (
-    <div className="flex items-center gap-3 px-4 py-2">
+    <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2">
       {/* Step back */}
       <button
         onClick={onStepBack}
         disabled={currentStep === 0}
-        className="p-1.5 text-gray-600 hover:text-white disabled:opacity-20 transition-colors"
+        className="p-2 sm:p-1.5 text-gray-600 hover:text-white disabled:opacity-20 transition-colors"
         title="Step back"
       >
         <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
@@ -50,7 +50,7 @@ export function Controls({
       {/* Play/Pause */}
       <button
         onClick={isPlaying ? onPause : onPlay}
-        className="p-1.5 text-gray-600 hover:text-white transition-colors"
+        className="p-2 sm:p-1.5 text-gray-600 hover:text-white transition-colors"
         title={isPlaying ? 'Pause (Space)' : 'Play (Space)'}
       >
         {isPlaying ? (
@@ -69,7 +69,7 @@ export function Controls({
       <button
         onClick={onStepForward}
         disabled={currentStep === totalSteps - 1}
-        className="p-1.5 text-gray-600 hover:text-white disabled:opacity-20 transition-colors"
+        className="p-2 sm:p-1.5 text-gray-600 hover:text-white disabled:opacity-20 transition-colors"
         title="Step forward"
       >
         <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
@@ -79,7 +79,7 @@ export function Controls({
 
       {/* Scrubber */}
       <div
-        className="flex-1 h-px bg-white/10 cursor-pointer relative group"
+        className="flex-1 h-1 sm:h-px bg-white/10 cursor-pointer relative group rounded-full"
         onClick={(e) => {
           const rect = e.currentTarget.getBoundingClientRect();
           const ratio = (e.clientX - rect.left) / rect.width;
@@ -87,22 +87,22 @@ export function Controls({
         }}
       >
         <div
-          className="h-full bg-white/50 transition-[width] duration-100"
+          className="h-full bg-white/50 rounded-full transition-[width] duration-100"
           style={{ width: `${progress}%` }}
         />
         <div
-          className="absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute top-1/2 -translate-y-1/2 w-3 h-3 sm:w-2 sm:h-2 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
           style={{ left: `${progress}%`, transform: 'translate(-50%, -50%)' }}
         />
       </div>
 
       {/* Step counter */}
-      <span className="text-[10px] font-mono tabular-nums text-gray-600 min-w-[3.5rem] text-right">
+      <span className="text-[10px] font-mono tabular-nums text-gray-600 min-w-[3rem] sm:min-w-[3.5rem] text-right">
         {currentStep + 1} / {totalSteps}
       </span>
 
-      {/* Speed pills */}
-      <div className="flex items-center gap-0.5">
+      {/* Speed pills — hidden on small screens */}
+      <div className="hidden sm:flex items-center gap-0.5">
         {SPEED_OPTIONS.map((opt) => (
           <button
             key={opt.value}

@@ -22,7 +22,7 @@ export function DescriptionPanel({
     totalConstraints > 0 ? (satisfiedCount / totalConstraints) * 100 : 0;
 
   return (
-    <div className={`flex flex-col gap-2 px-4 py-2.5 ${className}`}>
+    <div className={`flex flex-col gap-2 px-3 sm:px-4 py-2 sm:py-2.5 ${className}`}>
       {/* Description */}
       <p className="text-xs text-gray-500 leading-relaxed">{description}</p>
 

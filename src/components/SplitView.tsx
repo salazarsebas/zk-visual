@@ -47,9 +47,9 @@ export function SplitView({
   return (
     <div className={`flex flex-col h-full ${className}`}>
       {/* Circuit panels */}
-      <div className="flex-1 flex min-h-0">
-        {/* Naive (left) */}
-        <div className="flex-1 flex flex-col border-r border-white/5">
+      <div className="flex-1 flex flex-col sm:flex-row min-h-0">
+        {/* Naive (left/top) */}
+        <div className="flex-1 flex flex-col border-b sm:border-b-0 sm:border-r border-white/5">
           <div
             className="px-3 py-1.5 text-[10px] font-medium border-b border-white/5 flex items-center justify-between"
             style={{ color: COLORS.panelCostly }}
@@ -76,7 +76,7 @@ export function SplitView({
           </div>
         </div>
 
-        {/* Optimized (right) */}
+        {/* Optimized (right/bottom) */}
         <div className="flex-1 flex flex-col">
           <div
             className="px-3 py-1.5 text-[10px] font-medium border-b border-white/5 flex items-center justify-between"
